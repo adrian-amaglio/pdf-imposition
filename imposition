@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# Only works for A5 books TODO->generalize
+# Only works for A5 books to A4 sheets
 # Only the central page can be A4
-# Odd page number in no-poster result in a failure because wtf are you printing ?
-
-# Todo test if there is odd page number or A4 poster
-
+# Odd page number without poster result in a failure because wtf are you printing ?
 
 # Needs an input file
 if [ $# != 1 ]; then
@@ -16,10 +13,6 @@ fi
 function quit(){
 	rm out*.pdf
 	exit $1
-}
-
-function pause(){
-   read -p "$*"
 }
 
 # Page count
