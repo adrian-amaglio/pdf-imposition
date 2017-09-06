@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Only works for A5 books TODO->generalize
+# Only the central page can be A4
+# Odd page number in no-poster result in a failure because wtf are you printing ?
+
+# Todo test if there is odd page number or A4 poster
+
+
+# Needs an input file
+if [ $# != 1 ]; then
+	echo "Usage $0 <file.pdf>"
+	quit -1
+fi
+
+function quit(){
+	rm out*.pdf
+	exit $1
+}
+
+function pause(){
+   read -p "$*"
+}
+
+# Page count
+declare -i nbPages=`pdfinfo $1 | grep 'Pages:' | cut -d ':' -f 2`
+pdfseparate $1 out%d.pdf
+declare -i midPage=$nbPages-\($nbPages/2\) # this is integer division
+
+# Is the central double page a poster ?
+# centerPageSize=`pdfinfo out${midPage}.pdf | grep 'Page size:' | cut -d ':' -f 2`
+if [[ $(pdfinfo out${midPage}.pdf | grep 'A4') ]] ; then
+	posterMode=1
+else
+	posterMode=0
+fi
+
+# Defining page order
+pageOrder=''
+declare -i page=1
+declare -i oppositePage=$nbPages
+declare -i pagesLeft=$nbPages
+
+while [ $pagesLeft -ne 0 ]; do
+	if [ $pagesLeft -ge 4 ]; then
+		declare -i next=$page+1
+		declare -i nextOppositePage=$oppositePage-1
+		pageOrder="$pageOrder out${oppositePage}.pdf out${page}.pdf out${next}.pdf out${nextOppositePage}.pdf"
+		page=$page+2
+		oppositePage=$oppositePage-2
+	elif [ $pagesLeft -eq 3 ]; then
+		pageOrder="$pageOrder out${page}.pdf out${oppositePage}.pdf"
+		page=$page+1
+		oppositePage=$oppositePage-1
+	elif [ $pagesLeft -eq 2 ]; then
+		pageOrder="$pageOrder out${page}.pdf out${page}.pdf"
+		pageOrder="$pageOrder out${oppositePage}.pdf out${oppositePage}.pdf"
+		page=$page+1
+		oppositePage=$oppositePage-1
+	elif [ $pagesLeft -eq 1 ]; then
+		if [ $posterMode -eq 0 ] ; then
+			quit -1
+		fi
+		page=$page+1
+	fi
+	pagesLeft=$oppositePage-$page+1
+done
+
+
+pdfunite $pageOrder result.pdf
+pdfnup result.pdf --nup '2x1' -o result.pdf
+
+if [ $posterMode -eq 1 ] ; then
+	pdfunite result.pdf out${midPage}.pdf result.pdf
+fi
+
+quit 0
