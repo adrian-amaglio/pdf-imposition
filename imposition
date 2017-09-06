@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Only works for A5 books to A4 sheets
+# Only works for A5 books to A4 sheets => TODO make it print AN sized book on AN+1 sized paper
 # Only the central page can be A4
 # Odd page number without poster result in a failure because wtf are you printing ?
 
