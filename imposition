@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# Only works for A5 books to A4 sheets => TODO make it print AN sized book on AN+1 sized paper
 # Only the central page can be A4
 # Odd page number without poster result in a failure because wtf are you printing ?
+
+function quit(){
+	rm out*.pdf
+	exit $1
+}
 
 # Needs an input file
 if [ $# != 1 ]; then
@@ -10,18 +14,12 @@ if [ $# != 1 ]; then
 	quit -1
 fi
 
-function quit(){
-	rm out*.pdf
-	exit $1
-}
-
 # Page count
 declare -i nbPages=`pdfinfo $1 | grep 'Pages:' | cut -d ':' -f 2`
 pdfseparate $1 out%d.pdf
 declare -i midPage=$nbPages-\($nbPages/2\) # this is integer division
 
 # Is the central double page a poster ?
-# centerPageSize=`pdfinfo out${midPage}.pdf | grep 'Page size:' | cut -d ':' -f 2`
 if [[ $(pdfinfo out${midPage}.pdf | grep 'A4') ]] ; then
 	posterMode=1
 else
